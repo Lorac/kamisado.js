@@ -1,0 +1,24 @@
+{
+  "name": "kamisado.js",
+  "version": "0.0.1",
+  "author": "Maxime Roussin-Bélanger <maxime.roussinbelanger@gmail.com>",
+  "homepage": "https://gitlab.com/lorac/kamisado.js",
+  "license": "MIT",
+  "description": "A Javascript kamisado ES6 library for kamisado validate/play moves",
+  "keywords": [
+    "kamisado"
+  ],
+  "main": "kamisado.js",
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.com/lorac/kamisado.js.git"
+  },
+  "devDependencies": {
+    "mocha": "^3.0.0",
+    "chai": "^3.5.0",
+    "uglify-js2": "^2.1.11"
+  },
+  "dependencies": {
+    "eslint": "^3.5.0"
+  }
+}
