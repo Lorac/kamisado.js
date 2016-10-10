@@ -3,15 +3,6 @@
 const BLACK = 'b'
 const WHITE = 'w'
 
-const RANK_1 = 7
-const RANK_2 = 6
-const RANK_3 = 5
-const RANK_4 = 4
-const RANK_5 = 3
-const RANK_6 = 2
-const RANK_7 = 1
-const RANK_8 = 0
-
 const BOARD =
   {
     a8: 'o', b8: 'b', c8: 'p', d8: 'k', e8: 'y', f8: 'r', g8: 'g', h8: 'm',
@@ -38,21 +29,9 @@ const SQUARES = {
   a1: 112, b1: 113, c1: 114, d1: 115, e1: 116, f1: 117, g1: 118, h1: 119
 }
 
-const PAWNS =
-  {
-    o: 'orange',
-    r: 'red',
-    g: 'green',
-    k: 'pink',
-    y: 'yellow',
-    b: 'blue',
-    p: 'purple',
-    m: 'maroon'
-  }
-
 const SYMBOLS = 'obpkyrgmOBPKYRGM'
 
-export class Kamisado {
+class Kamisado {
 
   constructor(fen) {
     const DEFAULT_POSITION = 'OBPKYRGM/8/8/8/8/8/8/mgrykpbo b 1'
@@ -68,7 +47,6 @@ export class Kamisado {
     this.turn = BLACK
     this.moveNumber = 1
     this.history = []
-    this._generateFen()
   }
 
   load(fen) {
@@ -92,7 +70,6 @@ export class Kamisado {
 
     this.turn = tokens[1]
     this.moveNumber = parseInt(tokens[2], 10)
-    this._generateFen()
 
     return true
   }
@@ -103,15 +80,20 @@ export class Kamisado {
     * .move({ from: 'h7', <- where the 'move' is a move object (additional
     *         to :'h8',      fields are ignored)
     *      })
+    * .move('Ma7') <- Where the move is a case-sensitive SAN string
+    *
     */
     var moveObj = null
-    var moves = this._generateLegalMoves()
 
-    /* convert the pretty move object to an ugly move object */
-    for (var i = 0, len = moves.length; i < len; i++) {
-      if (move.from === algebraic(moves[i].from) && move.to === algebraic(moves[i].to)) {
-        moveObj = moves[i]
-        break
+    if (typeof move === 'string') {
+      moveObj = this._moveFromSan(move)
+    } else if (typeof move === 'object') {
+      var moves = this._generateLegalMoves()
+      for (var i = 0, len = moves.length; i < len; i++) {
+        if (move.from === algebraic(moves[i].from) && move.to === algebraic(moves[i].to)) {
+          moveObj = moves[i]
+          break
+        }
       }
     }
 
@@ -122,7 +104,7 @@ export class Kamisado {
 
     this._makeMove(moveObj)
 
-    return move
+    return moveObj
   }
 
   turn() {
@@ -158,6 +140,23 @@ export class Kamisado {
     return s
   }
 
+  _moveFromSan(move) {
+    var moves = this._generateLegalMoves()
+    for (var i = 0, len = moves.length; i < len; i++) {
+      if (move === this._moveToSan(moves[i])) {
+        return moves[i]
+      }
+    }
+    return null
+  }
+
+  _moveToSan(move) {
+    if (typeof move === 'object') {
+      return move.piece + move.to
+    }
+    return null
+  }
+
   _buildMove(board, from, to) {
     var move = {
       player: this.turn,
@@ -168,6 +167,15 @@ export class Kamisado {
     return move
   }
 
+/**
+ * Outputs a list of move objects :
+ *  {
+      player: this.turn,
+      from: algebraic(from),
+      to: algebraic(to),
+      piece: board[from].piece
+    }
+ */
   _generateLegalMoves() {
     var legalMoves = []
     var us = this.turn
@@ -189,8 +197,8 @@ export class Kamisado {
         continue
       }
 
-      if (typeof (lastMove) !== 'undefined') {
-        if (this._get(algebraic(lastMove.move.to)).toLowerCase() !== this._get(algebraic(i)).piece.toLowerCase()) {
+      if (typeof lastMove !== 'undefined') {
+        if (this._get(lastMove.move.to).toLowerCase() !== this._get(algebraic(i)).piece.toLowerCase()) {
           continue
         }
       }
@@ -199,6 +207,7 @@ export class Kamisado {
         var offset = PIECE_OFFSETS[j]
         var square = i
 
+        // Pieces can only go forward and diagonally.
         if (piece.player === BLACK && offset > 0 || piece.player === WHITE && offset < 0) {
           while (true) {
             square += offset
@@ -219,8 +228,8 @@ export class Kamisado {
   _makeMove(move) {
     this._push(move)
 
-    this.board[move.to] = this.board[move.from]
-    this.board[move.from] = null
+    this.board[SQUARES[move.to]] = this.board[SQUARES[move.from]]
+    this.board[SQUARES[move.from]] = null
 
     if (this.turn === WHITE) {
       this.moveNumber++
@@ -252,10 +261,10 @@ export class Kamisado {
           fen += empty
           empty = 0
         }
-        const color = this.board[i].color
+        const player = this.board[i].player
         const piece = this.board[i].piece
 
-        fen += (color === WHITE) ? piece.toUpperCase() : piece.toLowerCase()
+        fen += (player === WHITE) ? piece.toUpperCase() : piece.toLowerCase()
       }
 
       if ((i + 1) & 0x88) {
@@ -291,14 +300,12 @@ export class Kamisado {
     var sq = SQUARES[square]
 
     this.board[sq] = { color: BOARD[square], piece: piece.color, player: piece.player }
-    this._generateFen()
     return true
   }
 
   _remove(square) {
     const piece = this.get(square)
     this.board[SQUARES[square]] = null
-    this._generateFen()
 
     return piece
   }

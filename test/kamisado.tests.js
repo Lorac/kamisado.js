@@ -3,4 +3,4 @@ if (typeof require !== 'undefined') {
   var Kamisado = require('../kamisado').Kamisado
 }
 
-var assert = chai.assert;
+var assert = chai.assert
