@@ -15,9 +15,16 @@ const BOARD =
     a1: 'm', b1: 'g', c1: 'r', d1: 'y', e1: 'k', f1: 'p', g1: 'b', h1: 'o'
   }
 
-const PIECE_OFFSETS = [-15, -30, -45, -60, -75, -90, -105, 15, 30, 45, 60, 75, 90, 105,
-                       -16, -32, -48, -64, -80, -96, -112, 16, 32, 48, 64, 80, 96, 112,
-                       -17, -34, -51, -68, -85, -102, -119, 17, 34, 51, 58, 85, 102, 119]
+const BLACK_OFFSETS = [ 15, 30, 45, 60, 75, 90, 105,
+                        16, 32, 48, 64, 80, 96, 112,
+                        17, 34, 51, 68, 85, 102, 119]
+
+const WHITE_OFFSETS = [-15, -30, -45, -60, -75, -90, -105,
+                       -16, -32, -48, -64, -80, -96, -112,
+                       -17, -34, -51, -68, -85, -102, -119]
+
+const SYMBOLS = 'obpkyrgmOBPKYRGM'
+
 const SQUARES = {
   a8: 0, b8: 1, c8: 2, d8: 3, e8: 4, f8: 5, g8: 6, h8: 7,
   a7: 16, b7: 17, c7: 18, d7: 19, e7: 20, f7: 21, g7: 22, h7: 23,
@@ -28,8 +35,6 @@ const SQUARES = {
   a2: 96, b2: 97, c2: 98, d2: 99, e2: 100, f2: 101, g2: 102, h2: 103,
   a1: 112, b1: 113, c1: 114, d1: 115, e1: 116, f1: 117, g1: 118, h1: 119
 }
-
-const SYMBOLS = 'obpkyrgmOBPKYRGM'
 
 class Kamisado {
 
@@ -167,6 +172,10 @@ class Kamisado {
     return move
   }
 
+  moves() {
+    return this._generateLegalMoves()
+  }
+
 /**
  * Outputs a list of move objects :
  *  {
@@ -198,31 +207,46 @@ class Kamisado {
       }
 
       if (typeof lastMove !== 'undefined') {
-        if (this._get(lastMove.move.to).toLowerCase() !== this._get(algebraic(i)).piece.toLowerCase()) {
+        if (BOARD[lastMove.move.to] !== this._get(algebraic(i)).piece.toLowerCase()) {
           continue
         }
       }
 
-      for (var j = 0, len = PIECE_OFFSETS.length; j < len; j++) {
-        var offset = PIECE_OFFSETS[j]
+      let pieceOffsets = piece.player === BLACK ? BLACK_OFFSETS : WHITE_OFFSETS
+
+      for (var j = 0, len = pieceOffsets.length; j < len; j++) {
+        // Cannot jump over pieces
+        if (!this._isEmpty(i + pieceOffsets[j])) {
+          if (j < 7) {
+            j = 7
+          } else if (j < 14) {
+            j = 14
+          } else {
+            // No more legal moves possible
+            break
+          }
+        }
+        var offset = pieceOffsets[j]
+
         var square = i
+        while (true) {
+          // Pieces can only go forward and diagonally.
+          square += offset
+          if (square & 0x88) break
 
-        // Pieces can only go forward and diagonally.
-        if (piece.player === BLACK && offset > 0 || piece.player === WHITE && offset < 0) {
-          while (true) {
-            square += offset
-            if (square & 0x88) break
-
-            if (this.board[square] == null) {
-              legalMoves.push(this._buildMove(this.board, i, square))
-              break
-            }
+          if (this._isEmpty(square)) {
+            legalMoves.push(this._buildMove(this.board, i, square))
+            break
           }
         }
       }
     }
 
     return legalMoves
+  }
+
+  _isEmpty(i) {
+    return typeof this.board[i] === 'undefined' || this.board[i] === null
   }
 
   _makeMove(move) {
