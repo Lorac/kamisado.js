@@ -145,6 +145,20 @@ class Kamisado {
     return s
   }
 
+  isWon() {
+    for (let i = SQUARES.a1; i <= SQUARES.h1; i++) {
+      if (!this._isEmpty(i) && this.board[i].player === BLACK) {
+        return true
+      }
+    }
+    for (let i = SQUARES.a8; i <= SQUARES.h8; i++) {
+      if (!this._isEmpty(this.board[i]) && this.board[i].player === WHITE) {
+        return true
+      }
+    }
+    return false
+  }
+
   fen() {
     return this._generateFen()
   }
@@ -259,6 +273,10 @@ class Kamisado {
     this.board[SQUARES[move.to]] = this.board[SQUARES[move.from]]
     this.board[SQUARES[move.from]] = null
 
+    if (this.isWon()) {
+      return
+    }
+
     if (this.turn === WHITE) {
       this.moveNumber++
     }
@@ -338,6 +356,8 @@ class Kamisado {
     return piece
   }
 }
+
+
 
 function isDigit(c) {
   return '0123456789'.indexOf(c) !== -1
