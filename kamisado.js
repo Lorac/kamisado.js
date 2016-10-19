@@ -145,6 +145,10 @@ class Kamisado {
     return s
   }
 
+  fen() {
+    return this._generateFen()
+  }
+
   _moveFromSan(move) {
     var moves = this._generateLegalMoves()
     for (var i = 0, len = moves.length; i < len; i++) {
@@ -288,7 +292,7 @@ class Kamisado {
         const player = this.board[i].player
         const piece = this.board[i].piece
 
-        fen += (player === WHITE) ? piece.toUpperCase() : piece.toLowerCase()
+        fen += (player === BLACK) ? piece.toUpperCase() : piece.toLowerCase()
       }
 
       if ((i + 1) & 0x88) {
@@ -352,3 +356,5 @@ function rank(i) {
 function file(i) {
   return i & 15
 }
+
+module.exports = Kamisado
