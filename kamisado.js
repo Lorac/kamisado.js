@@ -1,8 +1,5 @@
 'use strict'
 
-const BLACK = 'b'
-const WHITE = 'w'
-
 const BOARD =
   {
     a8: 'o', b8: 'b', c8: 'p', d8: 'k', e8: 'y', f8: 'r', g8: 'g', h8: 'm',
@@ -35,11 +32,12 @@ const SQUARES = {
   a2: 96, b2: 97, c2: 98, d2: 99, e2: 100, f2: 101, g2: 102, h2: 103,
   a1: 112, b1: 113, c1: 114, d1: 115, e1: 116, f1: 117, g1: 118, h1: 119
 }
-
+const BLACK = 'b'
+const WHITE = 'w'
+const DEFAULT_POSITION = 'OBPKYRGM/8/8/8/8/8/8/mgrykpbo b 1'
 class Kamisado {
 
   constructor(fen) {
-    const DEFAULT_POSITION = 'OBPKYRGM/8/8/8/8/8/8/mgrykpbo b 1'
     if (typeof fen === 'undefined') {
       this.load(DEFAULT_POSITION)
     } else {
@@ -52,6 +50,10 @@ class Kamisado {
     this.turn = BLACK
     this.moveNumber = 1
     this.history = []
+  }
+
+  gameMoves() {
+    return this.history
   }
 
   load(fen) {
@@ -95,7 +97,7 @@ class Kamisado {
     } else if (typeof move === 'object') {
       var moves = this._generateLegalMoves()
       for (var i = 0, len = moves.length; i < len; i++) {
-        if (move.from === algebraic(moves[i].from) && move.to === algebraic(moves[i].to)) {
+        if (move.from === moves[i].from && move.to === moves[i].to) {
           moveObj = moves[i]
           break
         }
@@ -112,7 +114,11 @@ class Kamisado {
     return moveObj
   }
 
-  turn() {
+  currentMoveNumber() {
+    return this.moveNumber
+  }
+
+  currentTurn() {
     return this.turn
   }
 
@@ -152,7 +158,7 @@ class Kamisado {
       }
     }
     for (let i = SQUARES.a8; i <= SQUARES.h8; i++) {
-      if (!this._isEmpty(this.board[i]) && this.board[i].player === WHITE) {
+      if (!this._isEmpty(i) && this.board[i].player === WHITE) {
         return true
       }
     }
@@ -273,10 +279,6 @@ class Kamisado {
     this.board[SQUARES[move.to]] = this.board[SQUARES[move.from]]
     this.board[SQUARES[move.from]] = null
 
-    if (this.isWon()) {
-      return
-    }
-
     if (this.turn === WHITE) {
       this.moveNumber++
     }
@@ -357,8 +359,6 @@ class Kamisado {
   }
 }
 
-
-
 function isDigit(c) {
   return '0123456789'.indexOf(c) !== -1
 }
@@ -376,5 +376,7 @@ function rank(i) {
 function file(i) {
   return i & 15
 }
-
+Kamisado.DEFAULT_POSITION = DEFAULT_POSITION
+Kamisado.BLACK = BLACK
+Kamisado.WHITE = WHITE
 module.exports = Kamisado
